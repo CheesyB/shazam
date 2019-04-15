@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Shazam</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="menu_fetch_data">Fetch Locations</string>
+    <string name="menu_delete_all">Delete Everything</string>
+    <string name="menu_show_at_maps">Show at Map</string>
+    <string name="menu_go_back">Back</string>
+
+
+
+
+    <string name="item_latitude">Latitude:</string>
+    <string name="item_longitude">Longitude:</string>
+    <string name="item_default">Value</string>
+
+    <string name="main_total">Total</string>
+
+
+
+</resources>
