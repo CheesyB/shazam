@@ -2,6 +2,7 @@ package karunya.charles.lorry;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Observer<List<Local>> mLocalListObserver;
     private Observer<Integer> mTotalLocalsObserver;
     private Observer<Busy> mBusyOberver;
+    private Observer<Local> mLatestLocalObserver;
+
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            mViewModel.fetchLatestLocal();
+            timerHandler.postDelayed(this, 10000);
+        }
+    };
 
 
     @Override
@@ -86,6 +98,28 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         };
         mViewModel.isBusy().observe(this, mBusyOberver);
         mViewModel.setBusy(new Busy(false));
+
+        mLatestLocalObserver = new Observer<Local>(){
+            private String prevTimestamp;
+            @Override
+            public void onChanged(@Nullable Local local) {
+                if(prevTimestamp == null || prevTimestamp.equals(local.getTimestamp())){
+                    Log.d(TAG,"TimeStamps are equal not updating anything:)");
+                } else{
+                    atLng currentMark = new LatLng(loc.getLatitude(), loc.getLongitude());
+                    mMap.addMarker(new MarkerOptions().position(currentMark)
+                            .title(String.format("Loaction%d",i)));
+
+                Local lastLocal = locals.get(locals.size() - 1);
+                LatLng lastMark = new LatLng(lastLocal.getLatitude(), lastLocal.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastMark,15.0f));
+                }
+                }
+                
+
+            }
+        }
+
     }
 
 
@@ -117,6 +151,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case R.id.go_back:
                 finish();
                 return true;
+            case R.id.toggle_fetch_latest:
+                timerHandler.postDelayed(timerRunnable, 0);
             default:
                 return super.onOptionsItemSelected(item);
         }

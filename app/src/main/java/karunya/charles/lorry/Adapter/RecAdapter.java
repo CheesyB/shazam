@@ -37,7 +37,6 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.RecViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull RecAdapter.RecViewHolder holder, int position) {
         holder.setLocal(mLocals.get(position));
-
     }
 
     @Override
@@ -61,12 +60,14 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.RecViewHolder> {
         private static final String TAG = "RecViewHolder";
         public TextView mLongi;
         public TextView mLati;
+        public TextView mTimestamp;
 
         public RecViewHolder(@NonNull View itemView) {
             super(itemView);
 
             mLongi  = (TextView)itemView.findViewById(R.id.itemValueLongitude);
             mLati = (TextView)itemView.findViewById(R.id.itemValueLatitude);
+            mTimestamp = (TextView)itemView.findViewById(R.id.itemValueTimestamp);
             if(mLati == null || mLongi == null){
                 Log.d(TAG,"Something is wrong here! Null!");
             }
@@ -75,6 +76,7 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.RecViewHolder> {
         public void setLocal(Local local ){
             mLongi.setText(local.getLongitude().toString());
             mLati.setText(local.getLatitude().toString());
+            mTimestamp.setText(local.getTimestamp().toString());
         }
 
     }

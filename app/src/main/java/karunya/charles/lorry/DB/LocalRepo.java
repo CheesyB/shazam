@@ -67,6 +67,10 @@ public class LocalRepo {
         mThingSpeak.fetchAllLocals();
     }
 
+    public void fetchLatestLocal(){
+        mThingSpeak.fetchLatestLocal();
+    }
+
     public LiveData<Integer> getTotal(){
        return mLocalDao.getTotal();
     }
@@ -94,6 +98,7 @@ public class LocalRepo {
     public void updateLongitude(String payload, int id){
         new updateLongitudeAsyncTask(mLocalDao,payload,id).execute();
     }
+
     private static class updateLatitudeAsyncTask extends AsyncTask<Void,Void,Void> {
 
         private LocalDao myAsyncLocalDao;
@@ -112,8 +117,6 @@ public class LocalRepo {
             return null;
         }
     }
-
-
     private static class setBusyAsyncTask extends AsyncTask<Void,Void,Void> {
 
         private LocalDao myAsyncLocalDao;
@@ -207,8 +210,6 @@ public class LocalRepo {
             return null;
         }
     }
-
-
 
 
 }

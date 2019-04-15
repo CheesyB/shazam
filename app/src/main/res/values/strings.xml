@@ -6,6 +6,9 @@
     <string name="menu_delete_all">Delete Everything</string>
     <string name="menu_show_at_maps">Show at Map</string>
     <string name="menu_go_back">Back</string>
+    <string name="menu_toggle_fetch_latest_true">Fetching</string>
+    <string name="menu_toggle_fetch_latest_false">Not Fetching</string>
+
 
 
 

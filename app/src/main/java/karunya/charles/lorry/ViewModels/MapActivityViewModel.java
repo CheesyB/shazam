@@ -3,6 +3,7 @@ package karunya.charles.lorry.ViewModels;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.os.Handler;
 
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class MapActivityViewModel extends AndroidViewModel implements BaseViewMo
     private LiveData<List<Local>> mLocals;
     private LiveData<Integer> mTotal;
     private LiveData<Busy> mBusy;
+
 
     public MapActivityViewModel(Application application){
         super(application);
@@ -39,6 +41,10 @@ public class MapActivityViewModel extends AndroidViewModel implements BaseViewMo
 
     public void fetchAllLocals(){
         mLocalRepo.fetchAllLocals();
+    }
+
+    public void fetchLatestLocal(){
+        mLocalRepo.fetchLatestLocal();
     }
 
 

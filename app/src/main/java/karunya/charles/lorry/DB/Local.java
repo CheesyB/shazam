@@ -3,7 +3,12 @@ package karunya.charles.lorry.DB;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
+
+import java.time.LocalDateTime;
+
+import karunya.charles.lorry.DB.Converters.LocalDateTimeConverter;
 
 @Entity(tableName = "local_table")
 public class Local {
@@ -17,9 +22,13 @@ public class Local {
     private Double longitude;
     private Double latitude;
 
-    public Local(double longitude, double latitude) {
+    @TypeConverters(LocalDateTimeConverter.class)
+    private LocalDateTime timestamp;
+
+    public Local(double longitude, double latitude, LocalDateTime timestamp) {
         this.longitude = longitude;
         this.latitude = latitude;
+        this.timestamp = timestamp;
     }
 
     public int getId() {
@@ -46,4 +55,9 @@ public class Local {
     public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
 }

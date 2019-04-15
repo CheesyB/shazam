@@ -3,10 +3,11 @@ package karunya.charles.lorry.DB;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
+import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
 
-@Database(entities = {Local.class,Busy.class}, version = 3)
+@Database(entities = {Local.class,Busy.class}, version = 4)
 public abstract class LocalDatabase extends RoomDatabase {
 
     public abstract LocalDao localDao();

@@ -1,10 +1,10 @@
 package karunya.charles.lorry.ThingSpeak;
 
 
-
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.os.AsyncTask;
+import android.text.method.DateTimeKeyListener;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -16,7 +16,14 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import karunya.charles.lorry.DB.Local;
@@ -40,7 +47,7 @@ public class ThingSpeakApi {
     private static final String THINGSPEAK_FEED_ALL = "/feed.json";
 
     MutableLiveData<List<Local>> mAllLocals;
-    MutableLiveData<Local> mNewestLocal;
+    MutableLiveData<Local> mLatestLocal;
 
     MutableLiveData<Boolean> mFetching;
 
@@ -48,9 +55,8 @@ public class ThingSpeakApi {
     public MutableLiveData<List<Local>> getAllLocals() {
         return mAllLocals;
     }
-
-    public MutableLiveData<Local> getNewestLocal() {
-        return mNewestLocal;
+    public MutableLiveData<Local> getLatestLocal() {
+        return mLatestLocal;
     }
 
     public MutableLiveData<Boolean> getFetching() {
@@ -59,31 +65,30 @@ public class ThingSpeakApi {
 
     public ThingSpeakApi() {
         mAllLocals = new MutableLiveData<>();
-        mNewestLocal = new MutableLiveData<>();
+        mLatestLocal = new MutableLiveData<>();
         mFetching = new MutableLiveData<>();
         mFetching.setValue(false);
     }
 
-    public void fetchAllLocals(){
+    public void fetchAllLocals() {
         new FetchAllLocations().execute();
     }
 
-/*
-    public void fetchLatestLocation(){
+    public void fetchLatestLocal(){
         new FetchLatestLocation().execute();
     }
-*/
 
     // Okay Charles:) what's better having two distinct AsynkTasks sitting around
     // or one with more logic. Best would be to make an base class an inherit from it-> to lazy
     // right now....
-    private class FetchAllLocations extends AsyncTask<Void,Void,String> {
+    private class FetchAllLocations extends AsyncTask<Void, Void, String> {
 
         //https://thingspeak.com/channels/744150/feed.json
         protected void onPreExecute() {
             Log.d(TAG, "started fetching all data");
             mFetching.setValue(Boolean.TRUE);
         }
+
         protected String doInBackground(Void... urls) {
             try {
                 URL url = new URL(THINGSPEAK_CHANNEL_URL + THINGSPEAK_CHANNEL_ID +
@@ -119,14 +124,22 @@ public class ThingSpeakApi {
                 JSONObject channel = new JSONObject(response);
                 JSONArray feeds = channel.getJSONArray("feeds");
                 List<Local> fetchedLocals = new ArrayList<>();
-                for(int i = 0; i < feeds.length(); i++) {
+                for (int i = 0; i < feeds.length(); i++) {
                     JSONObject feed = feeds.getJSONObject(i);
                     String longitude = feed.getString(THINGSPEAK_LONGITUDE);
                     String latitude = feed.getString(THINGSPEAK_LATITUDE);
-                    //String timestamp = feed.getString(THINGSPEAK_TIMESTAMP);
-
+                    String timestamp = feed.getString(THINGSPEAK_TIMESTAMP);
+                    Log.d(TAG, String.format("the timestamps reads: %s", timestamp));
+                    //LocalDateTime tmpTime = LocalDateTime.now();
+                    try{
+                        LocalDateTime tmpTime = LocalDateTime.parse(timestamp,
+                                DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                        Log.d(TAG, String.format("and got parsed to: %s", tmpTime.toString()));
+                    }catch (DateTimeParseException e){
+                        Log.d(TAG, String.format("Hups could not parse timestamp: %s", e.toString()));
+                    }
                     Local tmpLocal = new Local(Double.parseDouble(longitude),
-                            Double.parseDouble(latitude));
+                            Double.parseDouble(latitude), LocalDateTime.now());
                     fetchedLocals.add(tmpLocal);
                 }
                 mAllLocals.setValue(fetchedLocals);
@@ -136,15 +149,17 @@ public class ThingSpeakApi {
         }
     }
 
-   /* private class FetchLatestLocation extends AsyncTask<Void,Void,String> {
+    private class FetchLatestLocation extends AsyncTask<Void, Void, String> {
 
         protected void onPreExecute() {
-            Log.d(TAG, "started fetching");
-            mViewModel.setState(Boolean.TRUE);
+            Log.d(TAG, "started fetching latest location");
+            mFetching.setValue(Boolean.TRUE);
 
         }
+
         protected String doInBackground(Void... urls) {
             try {
+                //https://thingspeak.com/channels/744150/feeds/last?WK2GFICTP06W7CTU=TIO7505TKCYF5Y9J1
                 URL url = new URL(THINGSPEAK_CHANNEL_URL + THINGSPEAK_CHANNEL_ID +
                         THINGSPEAK_FEEDS_LAST + THINGSPEAK_API_KEY_STRING + "=" +
                         THINGSPEAK_API_KEY + "");
@@ -166,26 +181,36 @@ public class ThingSpeakApi {
                 return null;
             }
         }
-        protected void onPostExecute(String response) {
-            mViewModel.setState(false);
-            if (response == null) {
-                Log.d(TAG, "This should not supposed to happen!!!!");
-                return;
-            }
-            try {
-                Log.d(TAG, "We made it to post execution");
-                Log.d(TAG, String.format("This is the response Sting: %s", response));
-                JSONObject feed = (JSONObject) new JSONTokener(response).nextValue();
-                String longitude = feed.getString(THINGSPEAK_LONGITUDE);
-                String latitude = feed.getString(THINGSPEAK_LATITUDE);
-                //String timestamp = feed.getString(THINGSPEAK_TIMESTAMP);
-                Local tmpLocal = new Local(Double.parseDouble(longitude),
-                        Double.parseDouble(latitude));
-                mViewModel.insert(tmpLocal);
 
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        protected void onPostExecute(String response) {
+                mFetching.setValue(Boolean.FALSE);
+                if (response == null) {
+                    Log.d(TAG, "This should not supposed to happen!!!!");
+                    return;
+                }
+                try {
+                    Log.d(TAG, "We made it to post execution");
+                    Log.d(TAG, String.format("This is the response Sting: %s", response));
+                    JSONObject channel = new JSONObject(response);
+                    String longitude = channel.getString(THINGSPEAK_LONGITUDE);
+                    String latitude = channel.getString(THINGSPEAK_LATITUDE);
+                    String timestamp = channel.getString(THINGSPEAK_TIMESTAMP);
+                    LocalDateTime tmpTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_INSTANT);
+                    Log.d(TAG, String.format("the timestamps reads: %s", timestamp));
+                    try{
+                        tmpTime = LocalDateTime.parse(timestamp,
+                                DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                        Log.d(TAG, String.format("and got parsed to: %s", tmpTime.toString()));
+                    }catch (DateTimeParseException e){
+                        Log.d(TAG, String.format("Hups could not parse timestamp"));
+                    }
+                    Local tmpLocal = new Local(Double.parseDouble(longitude),
+                            Double.parseDouble(latitude), LocalDateTime.now());
+                    mLatestLocal.setValue(tmpLocal);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
         }
-    }*/
+
+    }
 }

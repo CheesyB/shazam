@@ -16,8 +16,6 @@ public interface LocalDao {
     @Insert
     void insert(Local local);
 
-/*    @Query("INSERT :locals INTO TABLE local_table")
-    void insertAll(List<Local> locals);*/
 
     @Query("SELECT * FROM local_table ORDER BY mId ASC;")
     LiveData<List<Local>> getAllLoacals();
@@ -42,7 +40,9 @@ public interface LocalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void setBusy(Busy busy);
 
-
     @Query("SELECT * FROM busy_table WHERE mId = 1")
     LiveData<Busy> isBusy();
+
+
+
 }
